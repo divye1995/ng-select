@@ -16,6 +16,7 @@ export class ItemsList {
     }
 
     private _items: NgOption[] = [];
+    private _itemsToList: NgOption[] = [];
 
     get items(): NgOption[] {
         return this._items;
@@ -60,16 +61,26 @@ export class ItemsList {
         return null;
     }
 
+    hideHiddeInOptionsItems(){
+        if(this._ngSelect.hideItemsInList){
+            this._itemsToList = this._items.filter(x => !x.value?.hiddenInOptions);
+        }else{
+            this._itemsToList = this._items;
+        }
+
+    }
+
     setItems(items: readonly any[]) {
         this._items = items.map((item, index) => this.mapItem(item, index));
+        this.hideHiddeInOptionsItems();
         if (this._ngSelect.groupBy) {
-            this._groups = this._groupBy(this._items, this._ngSelect.groupBy);
-            this._items = this._flatten(this._groups);
+            this._groups = this._groupBy(this._itemsToList, this._ngSelect.groupBy);
+            this._itemsToList = this._flatten(this._groups);
         } else {
             this._groups = new Map();
-            this._groups.set(undefined, this._items)
+            this._groups.set(undefined, this._itemsToList)
         }
-        this._filteredItems = [...this._items];
+        this._filteredItems = [...this._itemsToList];
     }
 
     select(item: NgOption) {
@@ -170,14 +181,14 @@ export class ItemsList {
     }
 
     resetFilteredItems() {
-        if (this._filteredItems.length === this._items.length) {
+        if (this._filteredItems.length === this._itemsToList.length) {
             return;
         }
 
         if (this._ngSelect.hideSelected && this.selectedItems.length > 0) {
-            this._filteredItems = this._items.filter(x => !x.selected);
+            this._filteredItems = this._itemsToList.filter(x => !x.selected);
         } else {
-            this._filteredItems = this._items;
+            this._filteredItems = this._itemsToList;
         }
     }
 
